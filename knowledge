@@ -1,0 +1,50 @@
+### Knowledge data from psychotree
+
+library(psychotree)
+
+data(SPISA)
+
+## histogram of raw scores
+hist(rowSums(SPISA$spisa), breaks = 0:45 + 0.5)
+
+SP <- as.data.frame(SPISA[,1])
+SPNat <- SP[,37:45]
+
+###  ltm: marginal estimation
+library("ltm")
+
+pcmltm<-gpcm(SPNat, constraint = "rasch") 
+pcmltm
+
+pcmltmd<-gpcm(SPNat, constraint = "gpcm")
+pcmltmd
+
+###### conditional
+
+library("eRm")
+
+### natural Sciences
+spRNat<- RM(SPNat,  se = TRUE, sum0 = TRUE)
+summary(spRNat)
+
+####
+lr <-LRtest(spRNat, splitcr = "mean", se = TRUE)
+lr 
+
+par(cex.lab=1,cex.axis=1.0,cex.main=1,6,cex=1.6)
+
+dev.off()
+plotGOF(lr , beta.subset = "all", main = "Graphical Model Check", xlab="rawscores < mean", ylab="rawscores > mean",
+        tlab = "number",  type = "p", pos = 4, conf = NULL, ctrline = NULL,
+        smooline = NULL, asp = 1, set_par = TRUE,  reset_par = TRUE)
+
+dev.off()
+par(cex.lab=1,cex.axis=1.0,cex.main=1,6,cex=1.6)
+plotGOF(lr , beta.subset = "all", main = "Graphical Model Check", xlab="rawscores < mean", ylab="rawscores > mean",
+        tlab = "number",  type = "p", pos = 4, conf = list(gamma=0.95,col=1), ctrline = NULL,
+        smooline = NULL, asp = 1, set_par = TRUE,  reset_par = TRUE)
+
+
+
+
+
