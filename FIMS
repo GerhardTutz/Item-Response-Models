@@ -1,0 +1,123 @@
+###################  Binary Rasch models for FIMS data from TAM 
+library("polycor")
+datscored<-readRDS("datAust300.rds")
+ 
+### eRm: conditional likelihood estimation
+library("eRm")
+claustRM<- RM(datscored,  se = TRUE, sum0 = TRUE)
+summary(claustRM)
+claust<- PCM(datscored,  se = TRUE, sum0 = TRUE)  ## same with PCM
+cbind(Sumscore=colSums(datscored),Difficulty=-round(claustRM$betapar,digits=3),
+      Easiness=round(claustRM$betapar,digits=3))
+
+###  ltm: marginal estimation
+library("ltm")
+
+pcmltm<-gpcm(datscored, constraint = "rasch") 
+pcmltm
+
+### parameters
+matr<-pcmltm$coefficients[[1]] 
+for (i in 2:14)matr<-rbind(matr,pcmltm$coefficients[[i]])
+
+## restriction sum of item parameters is zero
+meanitems<-colSums(matr)[1]/14
+matr[,1]<-matr[,1]-meanitems
+round(matr,digits=3)
+
+#### Andersen's test
+lraust<-LRtest(claust, splitcr = "mean", se = TRUE)
+lraust
+par(cex.lab=1,cex.axis=1.0,cex.main=1.0,pch=16,cex=1.0)
+
+plotGOF(lraust, beta.subset = "all", main = "Graphical Model Check", xlab="rawscores < mean", ylab="rawscores > mean",
+        tlab = "number",  type = "p", pos = 4, conf = NULL, ctrline = NULL,
+        smooline = NULL, asp = 1, set_par = TRUE,  reset_par = TRUE)
+
+plotGOF(lraust, beta.subset = "all", main = "Graphical Model Check", xlab="rawscores < mean", ylab="rawscores > mean",
+        tlab = "number",  type = "p", pos = 4, conf = list(gamma=0.95,col=1), ctrline = NULL,
+        smooline = NULL, asp = 1,  set_par = TRUE,
+        reset_par = TRUE)
+
+
+#############################################
+####   Martin Löef test
+
+###### split by median
+
+mloefmedian<-MLoef(claust, splitcr = "median")
+
+## split by items: separate items 8,12,13
+cod<-rep(1,14)
+group<-c(8,12,13)
+cod[group]<-2
+
+mloefselitems<-MLoef(claust, splitcr = cod)
+
+############################################
+#### item selection, program RClustSeqStepsPure needed
+
+Steps<-RClustSeqStepsPure(datscored,I=14,frac=1,repp=1, fracsteps=.5, SA=30)
+
+Steps$seq
+
+round(Steps$mupperrankrel,digits=2)
+round(Steps$meanstd,digits=2)
+
+ ####  plot
+
+library("sm")
+
+ls<-14
+ltym <- rep(3,ls)
+nonR<-c(8,12)
+#nonR<-c(7,8,9,12)
+
+for (i in nonR)ltym[i]<-1
+
+sm.density.compare(Steps$rankframe$rank,Steps$rankframe$item, lwd=3,xlab="Order of item inclusion ",
+                   lty = ltym,col = 1)
+
+#### ltm with discrimination
+
+pcmltmd<-gpcm(datscored, constraint = "gpcm")
+pcmltmdR<-gpcm(datscored, constraint = "rasch")
+
+
+##### with TAM
+library(TAM)
+
+mod1 <- TAM::tam.mml(resp=datscored,irtmodel="1PL")
+summary(mod1)
+
+mod2 <- TAM::tam.mml.2pl(resp=datscored, irtmodel="2PL")
+summary(mod2)
+
+### reduced data set
+
+sel<-c(1,2,3,4,5,6,7,8,9,10,11,14)
+datscoredred<- datscored [,sel]
+pcmltmred<-gpcm(datscoredred, constraint = "rasch") 
+pcmltmred2l<-gpcm(datscoredred, constraint = "gpcm")
+
+sel<-c(1,3,4,5,6,7,9,10,11,14) ## without 2,8,12,13
+datscoredred<- datscored [,sel]
+pcmltmred<-gpcm(datscoredred, constraint = "rasch") 
+pcmltmred2l<-gpcm(datscoredred, constraint = "gpcm")
+
+sel<-c(1,3,4,5,6,10,11,14) ## without 2,7,8,9,12,13
+datscoredred<- datscored [,sel]
+pcmltmred<-gpcm(datscoredred, constraint = "rasch") 
+pcmltmred2l<-gpcm(datscoredred, constraint = "gpcm")
+
+pcmltmred
+pcmltmred2l
+
+### AIC
+AICred<--2*(pcmltmred$log.Lik)+ 2*(length(sel)+1)
+AICred2l<--2*(pcmltmred2l$log.Lik)+ 2*(2*length(sel)+1)
+
+AICred
+AICred2l
+
+1-pchisq(15.358,df=8)
