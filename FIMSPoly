@@ -1,0 +1,157 @@
+library("ltm")
+
+datraw<-readRDS("datAust200poly.RDS")
+
+############# graded with ltm
+
+### reduced item set
+
+itemsel<-c(2,3,4,6,7,8)
+fitgrad<- grm(datraw[,itemsel], constrained = TRUE, IRT.param = TRUE, Hessian = FALSE, 
+                start.val = NULL, na.action = NULL, control = list())
+
+fitgrad$coefficients
+deltgrad<-as.data.frame(fitgrad$coefficients)
+round(t(deltgrad),digits=3)
+summary(fitgrad)
+
+### Full item set: datraw  problems with several items
+
+grresp<- grm(datraw, constrained = TRUE, IRT.param = TRUE, Hessian = FALSE, 
+             start.val = NULL, na.action = NULL, control = list())
+
+
+###### Reduced item set: yields negative slopes for generalized model
+
+grrespselGEN<- grm(datraw[,itemsel], constrained = FALSE, IRT.param = TRUE, Hessian = FALSE, 
+                   start.val = NULL, na.action = NULL, control = list())
+
+grrespselGEN$coefficients
+deltgradGEN<-as.data.frame(grrespselGEN$coefficients)
+round(t(deltgradGEN),digits=3)
+
+
+##### partial credit
+
+### ltm (marginal estimates): reduced items
+itemsel<-c(2,3,4,6,7,8)
+
+pcmltmsel<-gpcm(datraw[,itemsel], constraint = "rasch")  ## partial credit
+pcmltmsel$coefficients
+
+### generalized model: does not converge
+
+gpcmltmsel<-gpcm(datraw[,itemsel]) ## generalized PCM not converged
+gpcmltmsel$coefficients
+
+
+##### eRm (conditional estimates)
+
+library("eRm") ## Rasch type
+
+### reduced items
+itemsel<-c(2,3,4,6,7,8)
+pcsel<- PCM(datraw[,itemsel],  se = TRUE, sum0 = TRUE)
+pcsel$etapar
+
+summary(pcsel)
+thresholds(pcsel)
+
+##### rating scale  (conditional estimates)
+ratsc<- RSM(datraw[,itemsel],  se = TRUE, sum0 = TRUE)
+summary(ratsc)
+
+#### plots Cumulative
+
+n <- 200
+par(lwd=2)
+
+min<--6
+max<-6
+x <- seq(min,max,length=n)
+
+k<-5 
+delt <-deltgrad[1:5,1] # 1 corresponds to item 2 graded
+delt <-deltgrad[1:5,4] # 4 corresponds to item 6 graded
+alpha<-deltgrad[6,1]
+deltm<-as.matrix(delt)
+
+### item characteristic curves
+
+cumm<- matrix(0,n,k)
+
+for (r in 1:k)cumm[ ,r]<-plogis(x-deltm[r,1])
+plot(x,cumm[,1],type="l",ylab=" ",xlab=bquote(theta[p] ),cex.lab=1.8,cex.axis=1.4)
+for (r in 2:k)lines(x,cumm[,r],type="l")#,lty=2)
+
+#text(x=-3, y= 0.6,label=expression("P(Y >=1)"),lty=2, cex=1.3)
+#text(x=-1, y= 0.5,label=expression("P(Y >=2)"),lty=2, cex=1.3)
+#text(x=3.4, y= 0.6,label=expression("P(Y >=3)"),lty=2, cex=1.3)
+#text(x=4.8, y= 0.65,label=expression("P(Y >=4)"),lty=2, cex=1.3)
+
+###### probabilities
+
+prob0<- matrix(0,n,1)
+probk<- matrix(0,n,1)
+prob<- matrix(0,n,k)
+prob0[,1]<-1-plogis(x-delt[1])
+
+par(cex.lab=1.6,cex.axis=1.2,cex.main=1.2,pch=16,cex=1.2,lwd=2)
+
+plot(x,prob0[,1],type="l",ylab=" ",xlab=bquote(theta[p] ),ylim=c(0,1),main ="Item 2")
+for (r in 1:k){prob[,r]<-plogis(x-delt[r])-plogis(x-delt[r+1])
+lines(x,prob[,r],type="l")}
+probk[,1]<- cumm[,k]
+lines(x,probk[,1],type="l")
+
+text(x=-4.2, y= 0.8,label=expression('cat'~  0),lty=2, cex=1.2)
+#text(x=-1, y= 0.6,label=expression('cat'~  1),lty=2, cex=1.3)
+#text(x=1, y= 0.5,label=expression('cat'~  2),lty=2, cex=1.3)
+#text(x=3.5, y= 0.75,label=expression('cat'~  3),lty=2, cex=1.3)
+text(x=5.2, y= 0.8,label=expression('cat'~  5),lty=2, cex=1.2)
+
+
+############################################
+#### plots partial credit
+
+n <- 200
+min<--5
+max<-6
+x <- seq(min,max,length=n)
+
+k<-5 
+
+#### choose item
+delt <-c(-2.080 ,  -0.347,   -2.824 ,   3.493 ,  -1.267) #item2 pcm
+#delt <-c(-5.373,    2.947,    0.875,    0.315,   -0.169   )  #item3 pcm
+#delt <-c(-2.,516   -0.458 ,   2.344 ,   0.869 ,   1.673   )  #item8 pcm
+#delt <-c(-1.514,   -0.567,   -2.546,    2.613,    0.809   )  #item6 pcm
+alpha<-1 
+
+prob0<- matrix(0,n,1)
+prob<- matrix(0,n,k)
+
+eta<- matrix(0,n,k)
+eta[,1]<- alpha*(x-delt[1])
+for (r in 2:k){eta[,r]<-eta[,r-1]+alpha*(x-delt[r])}
+
+expterm<- matrix(0,n,k)
+for (r in 1:k){expterm[,r]<-exp(eta[,r])}
+
+sum <-1
+for (r in 1:k){sum<-sum+expterm[,r]}
+
+for (r in 1:k){prob[,r]<-expterm[,r]/sum}
+
+prob0[,1]<-1-rowSums(prob)
+
+par(cex.lab=1.6,cex.axis=1.2,cex.main=1.2,pch=16,cex=1.2,lwd=2)
+
+plot(x,prob0[,1],type="l",ylab=" ",xlab=bquote(theta[p] ),cex.lab=1.8,cex.axis=1.4,ylim=c(0,1), main ="Item 2",
+     cex.main=1.6)
+
+for (r in 1:k){lines(x,prob[,r],type="l")}
+
+
+
+
