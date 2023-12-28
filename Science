@@ -1,0 +1,66 @@
+####  Science data
+
+library("ltm")
+library("PCMRS")
+
+
+
+
+ScienceReorderedframe<-readRDS("ScienceReorderedframe")
+
+
+###### response style: middle or extreme 
+
+respfit <- PCMRS(ScienceReorderedframe)
+
+
+round(respfit$delta, digits=3)
+respfit$Sigma
+round(respfit$delta.PCM, digits=3)
+respfit$sigma.PCM
+
+######
+respfit$neg.loglik
+
+########### plots
+nam<-colnames(ScienceReorderedframe)
+
+respfit$delta[1,]
+it<-3
+
+plot(c(1,2,3),respfit$delta[it,],type="b",xlab=" ",ylab=" ",main=nam[it],cex.lab=1.6,cex.axis=1.6,lty=1,
+     lwd=2.2,cex.main=1.8)
+lines(c(1,2,3),respfit$delta.PCM[it,],type="b",lty=2,lwd=2.2)
+
+
+## responses style uncertainty
+
+library("MultOrdRS")
+
+
+
+## two formulas, one without and one with explanatory variables (gender and age)
+f.tense0 <- as.formula(paste("cbind(",paste(colnames(ScienceReorderedframe),collapse=","),") ~ 1"))
+f.tense1 <- as.formula(paste("cbind(",paste(colnames(ScienceReorderedframe),collapse=","),") ~ Gender + Age"))
+
+## PCM with response style as a random effect,
+
+pcmrespst <- multordRS(f.tense0, data = ScienceReorderedframe)
+pcmrespst
+
+round(-pcmrespst$beta.thresh, digits=3) ### parameterization used in Tutz et al means -resulting parameter 
+
+## PCM
+pcm <- multordRS(f.tense0, data = ScienceReorderedframe, control = ctrl.multordRS(RS = FALSE, cores = 2))
+pcm
+
+
+
+
+descript(Science)
+
+
+pcmltm<-gpcm(Science, constraint = "rasch")  ## partial credit
+pcmltm$coefficients 
+
+gpcmltm<-gpcm(Science)  ## generalized PCM not converged
