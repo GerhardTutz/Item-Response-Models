@@ -1,0 +1,99 @@
+#### fluency data
+
+library(glmmTMB)
+
+FluencyLong<-readRDS("FluencyLong")
+FluencyItemsPersons<-readRDS("FluencyItemsPersons")
+
+
+##### Fit Poisson model
+
+Poisson <-
+  glmmTMB(value ~ -1 + item + (1 | subject_id), data =FluencyLong, family = poisson)
+summary(Poisson)
+
+
+### estimate CMPCM with global dispersion parameter
+
+Global <- glmmTMB(value ~ -1 + item + (1 | subject_id), data = FluencyLong, 
+                  family = compois, dispformula = ~ 1)
+summary(Global)
+
+
+### estimate CMPCM with item-specific dispersion parameters
+
+Disp <- glmmTMB(value ~ -1 + item + (1 | subject_id), data = FluencyLong, 
+                family = compois, dispformula = ~ -1 + item)
+
+summary(Disp)
+
+
+###Thresholds models program ThreshModFixed needed
+
+dat <- FluencyItemsPersons
+I <- dim(dat)[1]
+P <- dim(dat)[2]
+
+### fitting with fixed slopes logarithmic difficulty functions, normal response function
+
+lin <- "log"  
+
+Thr <- ThreshModFixed(dat,commonslope="com" ,indicator= "D", der="der",lin =lin,start, startind="no")
+Thr
+
+# restart until Thr$convergence=0
+start <- Thr$par
+Thr <- ThreshModFixed(dat,commonslope="com" ,indicator= "D", der="no",lin =lin,start=start, startind="yes")
+Thr
+
+###### with flexible functions
+
+lin <- "log1"   
+respf<-"NV"
+
+if(respf=="NV"){respfctd <- respfctdNV
+respfctc<-respfctcNV
+respfctder<-respfctderNV}
+if(respf=="logit"){respfctd <- respfctdlogit
+respfctc<-respfctclogit
+respfctder<-respfctderlogit}
+if(respf=="Gumbel"){respfctd <- respfctdGumbel
+respfctc<-respfctcGumbel
+respfctder<-respfctderGumbel}
+if(respf=="Gompertz"){respfctd <- respfctdGompertz
+respfctc<-respfctcGompertz
+respfctder<-respfctderGompertz}
+
+if(lin =="lin") {diffunct<-diffunctlin
+derdiffunct<-derdiffunctlin}
+if(lin =="log") {diffunct<-diffunctlog
+derdiffunct<-derdiffunctlog}
+if(lin =="log1") {diffunct<-diffunctlog1
+derdiffunct<-derdiffunctlog1}
+if(lin =="logit") {diffunct<-diffunctlogit
+derdiffunct<-derdiffunctlogit}
+
+
+### with Nv #### run ifs
+ThrVResp <- ThreshModFixedResp(dat,commonslope="var" ,indicator="D", der="der",lin =lin, start, startind="no",
+                               respf=respf)
+ThrVResp
+
+ThrVRespalpha <- ThreshModFixedAlphaResp(dat,commonslope="var" ,indicator="D", der="der",lin =lin, start, startind="no",
+                                         penalpha=0,respf=respf)
+ThrVRespalpha 
+
+### with Gumbel
+respf<-"Gumbel"  #### run ifs
+
+ThrVRespGumb <- ThreshModFixedResp(dat,commonslope="var" ,indicator="D", der="der",lin =lin, start, startind="no",
+                                   respf=respf)
+ThrVRespGumb
+
+### with Gompertz
+respf<-"Gompertz"  #### run ifs
+
+ThrVRespGomp <- ThreshModFixedResp(dat,commonslope="var" ,indicator="D", der="der",lin =lin, start, startind="no",
+                                   respf=respf)
+ThrVRespGomp
+
