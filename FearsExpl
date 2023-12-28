@@ -1,0 +1,87 @@
+###### Fears data with and without explanatory variables
+
+library("MultOrdRS")
+
+###################### whole data set from MultOrdRS
+
+data(GLES17)
+## scale data
+GLES17[,7:11] <- scale(GLES17[,7:11])
+
+## define formula
+f.GLES <- as.formula(cbind(RefugeeCrisis, ClimateChange, Terrorism,
+                           Globalization,  NuclearEnergy) ~
+                       Age + Gender + Unemployment + EastWest + Abitur)
+
+
+## fit adjacent categories model without and with response style parameters
+adj0 <- multordRS(f.GLES, data = GLES17, control = ctrl.multordRS(RS = FALSE, cores = 6))
+
+
+adj <- multordRS(f.GLES, data = GLES17, control = ctrl.multordRS(cores = 6))
+plot(adj, alpha = 0.05, CIfactor = 0.9,cex.axis=1.5,cex.lab=1.4,cex.main=1.5)
+
+m.GLES0
+m.GLES
+
+###### cumulative model
+cum0 <- multordRS(f.GLES, data = GLES17, control = ctrl.multordRS(RS = FALSE, cores = 6),model = "cumulative")
+
+cum <- multordRS(f.GLES, data = GLES17, control = ctrl.multordRS(cores = 6),model = "cumulative")
+
+plot(cum, alpha = 0.05, CIfactor = 0.9,cex.axis=1.5,cex.lab=1.4,cex.main=1.5)
+
+
+#### reduced data set
+datfears<-readRDS("fears200")
+head(datfears)
+
+## define formula
+f.GLES <- as.formula(cbind(RefugeeCrisis, ClimateChange, Terrorism,
+                           Globalization,  NuclearEnergy) ~
+                       Age + Gender + Unemployment + EastWest + Abitur)
+
+## fit adjacent categories model without and with response style parameters
+adj0 <- multordRS(f.GLES, data = datfears, control = ctrl.multordRS(RS = FALSE, cores = 6))
+
+datfears[,6:10] <- scale(datfears[,6:10])
+adj1 <- multordRS(f.GLES, data = datfears, control = ctrl.multordRS(cores = 6))
+plot(adj1, alpha = 0.05, CIfactor = 0.9,cex.axis=1.5,cex.lab=1.4,cex.main=1.5)
+
+
+##### without covariates
+
+f.GLES1 <- as.formula(cbind(RefugeeCrisis, ClimateChange, Terrorism,
+                           Globalization,  NuclearEnergy) ~ 1)
+
+m.GLES <- multordRS(f.GLES1, data = GLES17, control = ctrl.multordRS(cores = 6))
+
+##### response styles without explanatory variables, different data set!
+
+dat <- read.table("fear", header=TRUE,sep= " ")
+datPI<-t(dat)
+
+####   with package PCMRs
+
+library("PCMRS")
+
+datf<-as.data.frame(datPI)
+
+datf$R<-as.ordered(datf$R)
+datf$C<-as.ordered(datf$C)
+datf$T<-as.ordered(datf$T)
+datf$G<-as.ordered(datf$G)
+datf$N<-as.ordered(datf$N)
+summary(datf)
+#class(datf$R)
+
+respfitn <- PCMRS(datf)
+
+round(respfit$delta, digits=3)
+respfit$Sigma
+round(respfit$delta.PCM, digits=3)
+
+plot(respfit)
+persons <- person.posterior(respfit, cores = 2)
+plot(jitter(persons, 100))
+
