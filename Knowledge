@@ -1,0 +1,67 @@
+###### Differential item functioning for knowledge data
+
+library(psychotree)
+data(SPISA)
+
+## histogram of raw scores
+hist(rowSums(SPISA$spisa), breaks = 0:45 + 0.5)
+
+################ raschtree
+
+vignette("raschtree", package = "psychotree")
+
+raschtree <- raschtree(spisa ~ age + gender +
+                                  + semester + elite + spon, data = SPISA)
+plot(raschtree)
+
+############# DIFtree
+
+library(DIFtree)
+library(psychotree)
+data(SPISA)
+
+SP <- as.data.frame(SPISA[,1])  #responses
+C<- SPISA[,-1]  #covariates
+
+#### reduced dataset, only 100 persons, only natural science items,only two covariates,
+#### permutation test nperm = 300
+
+pers<-100
+SPNat <- SP[1:pers,37:45]
+CRed<-C[1:pers,1:2]
+
+##### uniform DIF, Rasch model, reduced data set
+
+m1<-DIFtree(SPNat, CRed, model = c("Rasch"), type = c("udif"), alpha = 0.05, 
+          nperm = 300, trace = FALSE,penalize = FALSE)
+print(m1)
+plot(m1,item=2)
+plot(m1,item=6)
+
+
+##### uniform DIF, Rasch model, full data set
+
+mf<-DIFtree(SP , C , model = c("Rasch"), type = c("udif"), alpha = 0.05, 
+            nperm = 1000, trace = FALSE,penalize = FALSE)
+print(mf)
+
+########### logistic, uniform, reduced data set
+
+ml1<-DIFtree(SPNat, CRed, model = "Logistic", type = c("udif"), alpha = 0.05, 
+            nperm = 500, trace = FALSE,penalize = FALSE)
+print(ml1)
+plot(ml1,item=2)
+plot(ml1,item=7)
+
+########### logistic, uniform, full data set
+
+mf<-DIFtree(SP , C , model = "Logistic", type = c("udif"), alpha = 0.05, 
+            nperm = 1000, trace = FALSE,penalize = FALSE)
+print(mf)
+
+########### logistic, non-uniform, reduced data set
+
+mlnu1<-DIFtree(SPNat, CRed, model = "Logistic", type = c("nudif"), alpha = 0.05, 
+             nperm = 500, trace = FALSE,penalize = FALSE)
+print(mlnu1)
+plot(mlnu1,item=2)
