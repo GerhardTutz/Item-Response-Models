@@ -28,7 +28,7 @@ Disp <- glmmTMB(value ~ -1 + item + (1 | subject_id), data = FluencyLong,
 summary(Disp)
 
 
-###Thresholds models program ThreshModFixed needed
+###Thresholds models program ThreshModFixed from ThresholdsModels needed
 
 dat <- FluencyItemsPersons
 I <- dim(dat)[1]
