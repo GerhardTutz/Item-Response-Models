@@ -2,9 +2,8 @@
 
 
 
-#getwd() # check 
-#setwd("C:\\Users\\Gerhard Tutz\\LRZ Sync+Share\\ABookRasch\\R\\BinaryFits")
-
+######  Example 2.4 
+ 
 
 ################## Fears data binary
 
