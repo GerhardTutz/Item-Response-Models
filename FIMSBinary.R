@@ -60,7 +60,7 @@ plotGOF(lraust, beta.subset = "all", main = "Graphical Model Check", xlab="rawsc
 
 
 #############################################
-####   Martin L?ef test
+####   Martin Löef test
 
 ###### split by median
 
@@ -157,3 +157,27 @@ summary(mod1)
 mod2 <- TAM::tam.mml.2pl(resp=datscoredred, irtmodel="2PL")
 summary(mod2)
 
+
+
+#### item selection, program RClustSeqStepsPure needed
+
+Steps<-RClustSeqStepsPure(datscored,I=14,frac=1,repp=1, fracsteps=.5, SA=30)
+
+Steps$seq
+
+round(Steps$mupperrankrel,digits=2)
+round(Steps$meanstd,digits=2)
+
+   ####  plot
+
+library("sm")
+
+ls<-14
+ltym <- rep(3,ls)
+nonR<-c(8,12)
+#nonR<-c(7,8,9,12)
+
+for (i in nonR)ltym[i]<-1
+
+sm.density.compare(Steps$rankframe$rank,Steps$rankframe$item, lwd=3,xlab="Order of item inclusion ",
+                   lty = ltym,col = 1)
