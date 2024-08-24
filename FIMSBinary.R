@@ -2,7 +2,7 @@
 
 ###################  Binary Rasch models for FIMS data from TAM 
 
-#setwd("C:\\Users\\tutz\\LRZ Sync+Share\\ABookRasch\\R\\BinaryBook")
+################  Example 2.1 and Example 2.3
 
 
 library("polycor")
