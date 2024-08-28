@@ -1,7 +1,4 @@
 
-#getwd() # check 
-#setwd("C:\\Users\\Tutz\\LRZ Sync+Share\\TuRaschFitness\\RTrialSimplerFit\\")
-
 
 ### Analysis of decathlon data using thresholds models
 ### with functions that contain difficulty and response functions as arguments
@@ -22,9 +19,6 @@ source("Posteriorgen.R")
 data(decathlon)
 decathlon
 
-
-
-#deca<-decathlon[14:41,]  # only olympic
 deca<-decathlon
 deca<-data.frame(deca)
 deca
