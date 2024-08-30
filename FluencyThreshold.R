@@ -3,9 +3,6 @@
 ###### Count data appoach: verbal fluency
 
 
-#getwd() # check 
-#setwd("C:\\Users\\Gerhard Tutz\\LRZ Sync+Share\\TuRaschThresholdM\\R\\")
-#setwd("C:\\Users\\tutz\\LRZ Sync+Share\\TuRaschThresholdsM2\\RCountFeb22\\")
 
 
 ############ Fit data sets: first fixed difficulty functions + plots
@@ -32,7 +29,7 @@ source("ProgramsFixedandBasis.R")
 ############### verbal fluency 
 #mydata <- read.table("vfnew.dat", header=TRUE,sep="", row.names="id")
 #mydata <- read.table("vfnew.dat", header=TRUE,sep="")
-datvf<-read.table("C:/Users/tutz/LRZ Sync+Share/TuRaschThresholdsM2/RCountFeb22/vfnew.dat",header=T)
+datvf<-read.table("vfnew.dat",header=T)
 summary(datvf)
 dataw <- spread(datvf, item, value)
 dataw
